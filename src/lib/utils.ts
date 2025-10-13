@@ -142,3 +142,52 @@ export function groupRecordsByDay(
 
 	return grouped;
 }
+
+/**
+ * 月次統計を計算
+ *
+ * @param records その月の全打刻レコード
+ * @returns 月次統計（総勤務時間、勤務日数、退勤未打刻の日）
+ */
+export function calculateMonthlyStats(records: Record[]): {
+	totalWorkingHours: string;
+	workingDays: number;
+	missingClockOuts: string[];
+} {
+	const grouped = groupRecordsByDay(records);
+	let totalMinutes = 0;
+	let workingDays = 0;
+	const missingClockOuts: string[] = [];
+
+	for (const [dateKey, dayRecords] of grouped) {
+		const recordsWithType = addTypeToRecords(dayRecords);
+
+		// 奇数個（退勤未打刻）の場合
+		if (recordsWithType.length % 2 !== 0) {
+			missingClockOuts.push(dateKey);
+			continue; // 集計から除外
+		}
+
+		// ペアごとに勤務時間を計算
+		for (let i = 0; i < recordsWithType.length; i += 2) {
+			const clockIn = recordsWithType[i];
+			const clockOut = recordsWithType[i + 1];
+
+			if (clockIn && clockOut) {
+				const minutes = getMinutesDiff(
+					new Date(clockIn.timestamp),
+					new Date(clockOut.timestamp),
+				);
+				totalMinutes += minutes;
+			}
+		}
+
+		workingDays++;
+	}
+
+	return {
+		totalWorkingHours: formatMinutesToHHMM(totalMinutes),
+		workingDays,
+		missingClockOuts,
+	};
+}

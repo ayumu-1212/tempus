@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ClockButton } from "@/components/ClockButton";
 import { StatusDisplay } from "@/components/StatusDisplay";
+import { RecordsList } from "@/components/RecordsList";
 
 export default function Home() {
 	const [status, setStatus] = useState<"clocked_in" | "clocked_out">("clocked_out");
@@ -41,7 +42,7 @@ export default function Home() {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col">
+		<div className="min-h-screen flex flex-col bg-gray-50">
 			<header className="border-b border-gray-200 bg-white">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 					<div className="flex items-center justify-between">
@@ -51,12 +52,18 @@ export default function Home() {
 				</div>
 			</header>
 
-			<main className="flex-1 flex items-center justify-center p-8">
-				<div className="text-center">
-					<ClockButton
-						currentStatus={status}
-						onClockSuccess={handleClockSuccess}
-					/>
+			<main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+				<div className="space-y-8">
+					{/* 打刻ボタンエリア */}
+					<div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
+						<ClockButton
+							currentStatus={status}
+							onClockSuccess={handleClockSuccess}
+						/>
+					</div>
+
+					{/* 履歴表示エリア */}
+					<RecordsList />
 				</div>
 			</main>
 		</div>
