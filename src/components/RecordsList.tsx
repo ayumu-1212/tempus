@@ -3,13 +3,16 @@
 import { useState, useEffect } from "react";
 import { RecordItem } from "./RecordItem";
 import { AlertBanner } from "./AlertBanner";
-import type { RecordsResponse } from "@/types";
+import { EditModal } from "./EditModal";
+import type { RecordsResponse, RecordWithType } from "@/types";
 
 export function RecordsList() {
 	const [data, setData] = useState<RecordsResponse | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [year, setYear] = useState(new Date().getFullYear());
 	const [month, setMonth] = useState(new Date().getMonth() + 1);
+	const [editingRecord, setEditingRecord] = useState<RecordWithType | null>(null);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
 	const fetchRecords = async (y: number, m: number) => {
 		setIsLoading(true);
@@ -47,6 +50,55 @@ export function RecordsList() {
 		} else {
 			setMonth(month + 1);
 		}
+	};
+
+	const handleEdit = (record: RecordWithType) => {
+		setEditingRecord(record);
+		setIsEditModalOpen(true);
+	};
+
+	const handleDelete = async (record: RecordWithType) => {
+		if (!confirm("この打刻を削除しますか？")) {
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/records/${record.id}`, {
+				method: "DELETE",
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to delete record");
+			}
+
+			// 削除成功後、リストを再取得
+			fetchRecords(year, month);
+		} catch (error) {
+			console.error("Delete error:", error);
+			alert("削除に失敗しました");
+		}
+	};
+
+	const handleEditSuccess = () => {
+		// 編集成功後、リストを再取得
+		fetchRecords(year, month);
+	};
+
+	const handleAddRecord = () => {
+		// 新規打刻用のダミーレコードを作成
+		const now = new Date();
+		const dummyRecord: RecordWithType = {
+			id: 0, // ダミーID
+			timestamp: now,
+			source: "web",
+			isEdited: false,
+			comment: null,
+			createdAt: now,
+			updatedAt: now,
+			type: "clock_in",
+		};
+		setEditingRecord(dummyRecord);
+		setIsEditModalOpen(true);
 	};
 
 	if (isLoading) {
@@ -112,7 +164,16 @@ export function RecordsList() {
 
 			{/* 履歴一覧 */}
 			<div className="space-y-2">
-				<h3 className="text-lg font-semibold text-gray-900 mb-4">打刻履歴</h3>
+				<div className="flex items-center justify-between mb-4">
+					<h3 className="text-lg font-semibold text-gray-900">打刻履歴</h3>
+					<button
+						type="button"
+						onClick={handleAddRecord}
+						className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+					>
+						+ 打刻を追加
+					</button>
+				</div>
 				{data.records.length === 0 ? (
 					<div className="text-center py-8 text-gray-500">
 						この月の打刻記録はありません
@@ -120,11 +181,26 @@ export function RecordsList() {
 				) : (
 					<div className="space-y-2">
 						{data.records.map((record) => (
-							<RecordItem key={record.id} record={record} />
+							<RecordItem
+								key={record.id}
+								record={record}
+								onEdit={handleEdit}
+								onDelete={handleDelete}
+							/>
 						))}
 					</div>
 				)}
 			</div>
+
+			{/* 編集モーダル */}
+			{editingRecord && (
+				<EditModal
+					record={editingRecord}
+					isOpen={isEditModalOpen}
+					onClose={() => setIsEditModalOpen(false)}
+					onSuccess={handleEditSuccess}
+				/>
+			)}
 		</div>
 	);
 }
