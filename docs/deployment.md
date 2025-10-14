@@ -85,17 +85,42 @@ git push origin main
 
 ---
 
+## 自動マイグレーションの仕組み
+
+プロジェクトには `build.sh` スクリプトが含まれており、ビルド時に自動的にマイグレーションが実行されます。
+
+**build.sh の内容:**
+```bash
+#!/bin/bash
+set -e
+
+echo "Running Prisma migrations..."
+npx prisma migrate deploy
+
+echo "Building Next.js app..."
+next build
+```
+
+このスクリプトにより、Vercelデプロイ時に：
+1. まず `prisma migrate deploy` でマイグレーションを実行
+2. 次に `next build` でアプリケーションをビルド
+
+という順序で処理が行われます。`DATABASE_URL`が正しく設定されていれば、自動的にテーブルが作成されます。
+
+---
+
 ## データベース構成
 
 ### ローカル開発環境
 - **DB**: PostgreSQL 16（Docker経由）
 - **接続**: `postgresql://tempus:tempus_dev_password@localhost:5432/tempus`
 - **データ永続化**: Docker volumeで管理
+- **マイグレーション**: `npm run db:migrate` で手動実行
 
 ### 本番環境（Vercel）
 - **DB**: Vercel Postgres
 - **接続**: Vercelダッシュボードで自動設定
-- **マイグレーション**: `postinstall`スクリプトで自動実行
+- **マイグレーション**: `build.sh`スクリプトで自動実行（デプロイ時）
 
 ---
 
