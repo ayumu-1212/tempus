@@ -1,6 +1,3 @@
-// Vercel Postgres用のスキーマ
-// デプロイ時にこれを schema.prisma にリネームしてください
-
 generator client {
   provider = "prisma-client-js"
 }

@@ -17,7 +17,7 @@
          │                       │
          ↓                       ↓
 ┌────────────────────────────────┐
-│      Database (SQLite)         │
+│    Database (PostgreSQL)       │
 └────────────────────────────────┘
 ```
 
@@ -25,7 +25,7 @@
 - **フロントエンド**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4
 - **バックエンド**: Next.js API Routes
 - **Discord Bot**: discord.js
-- **データベース**: SQLite（個人利用のため軽量でOK）
+- **データベース**: PostgreSQL（ローカル: Docker、本番: Vercel Postgres）
 - **ORM**: Prisma（型安全なDB操作）
 - **認証**: 環境変数によるBasic認証
 - **リンター/フォーマッター**: Biome
@@ -291,7 +291,7 @@ DISCORD_USER_ID=your-discord-user-id
 DISCORD_NOTIFICATION_CHANNEL_ID=channel-id
 
 # データベース
-DATABASE_URL=file:./dev.db
+DATABASE_URL=postgresql://tempus:tempus_dev_password@localhost:5432/tempus
 ```
 
 ---
@@ -315,8 +315,12 @@ DATABASE_URL=file:./dev.db
 ### セットアップ
 ```bash
 npm install
-npx prisma generate
-npx prisma db push
+
+# PostgreSQLコンテナを起動
+npm run db:start
+
+# マイグレーションを実行
+npm run db:migrate
 ```
 
 ### 開発サーバー起動
@@ -326,7 +330,7 @@ npm run dev
 
 ### Discord Bot起動
 ```bash
-npm run bot  # 別プロセスで起動
+npm run bot  # 別プロセスで起動（未実装）
 ```
 
 ### ビルド
@@ -339,13 +343,13 @@ npm run build
 ## デプロイ
 
 ### 推奨環境
-- **Web**: Vercel or Railway
-- **Discord Bot**: 常時起動が必要なため、VPS or Railway
-- **データベース**: SQLiteファイルをボリュームマウント
+- **Web**: Vercel（推奨）
+- **Discord Bot**: 常時起動が必要なため、VPS or Railway（未実装）
+- **データベース**: Vercel Postgres（本番）、Docker PostgreSQL（ローカル）
 
 ### 注意点
 - Discord Botは常時起動が必要
-- SQLiteファイルの永続化が必要
+- `build.sh`により、デプロイ時に自動でマイグレーションが実行される
 - 環境変数の設定を忘れずに
 
 ---

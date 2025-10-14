@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tempus
 
-## Getting Started
+個人用の勤怠管理システム。WebアプリケーションとDiscord Bot（未実装）の両方から出退勤を打刻でき、データを一元管理します。
 
-First, run the development server:
+## 特徴
+
+- **シンプルな打刻**: 出勤・退勤の自動判定（順序ベースの計算）
+- **カスタム日境界**: 6:00 AM ～ 翌日 5:59 AM を1日として集計
+- **月次統計**: 総勤務時間、勤務日数、退勤未打刻アラート
+- **編集機能**: 過去の打刻を編集・削除可能（編集済みは視覚的に区別）
+- **Basic認証**: シンプルな認証でアクセス制御
+
+## 技術スタック
+
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS v4
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL (Docker / Vercel Postgres)
+- **ORM**: Prisma
+- **Linter/Formatter**: Biome
+
+## セットアップ
+
+### 1. 依存関係のインストール
+
+```bash
+npm install
+```
+
+### 2. 環境変数の設定
+
+`.env`ファイルを作成：
+
+```env
+DATABASE_URL=postgresql://tempus:tempus_dev_password@localhost:5432/tempus
+BASIC_AUTH_USERNAME=admin
+BASIC_AUTH_PASSWORD=changeme
+```
+
+### 3. PostgreSQLの起動とマイグレーション
+
+```bash
+# PostgreSQLコンテナを起動
+npm run db:start
+
+# マイグレーションを実行
+npm run db:migrate
+```
+
+### 4. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 にアクセスしてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## データベース管理コマンド
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run db:start   # PostgreSQL起動
+npm run db:stop    # PostgreSQL停止
+npm run db:migrate # マイグレーション実行
+npm run db:reset   # データベースリセット
+npm run db:studio  # Prisma Studio起動
+```
 
-## Learn More
+## デプロイ
 
-To learn more about Next.js, take a look at the following resources:
+Vercelへのデプロイ手順は `docs/deployment.md` を参照してください。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ドキュメント
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `docs/requirements.md` - 要件定義
+- `docs/technical-specification.md` - 技術仕様書
+- `docs/deployment.md` - デプロイガイド
+- `CLAUDE.md` - Claude Code向けガイド
