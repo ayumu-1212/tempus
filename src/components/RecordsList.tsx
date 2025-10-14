@@ -190,15 +190,58 @@ export const RecordsList = forwardRef<RecordsListRef>((props, ref) => {
 						この月の打刻記録はありません
 					</div>
 				) : (
-					<div className="space-y-2">
-						{data.records.map((record) => (
-							<RecordItem
-								key={record.id}
-								record={record}
-								onEdit={handleEdit}
-								onDelete={handleDelete}
-							/>
-						))}
+					<div className="space-y-4">
+						{(() => {
+							// 日付ごとにグループ化（6:00-6:00基準）
+							const groupedByDate = new Map<string, RecordWithType[]>();
+
+							for (const record of data.records) {
+								const date = new Date(record.timestamp);
+								// 6時より前なら前日扱い
+								if (date.getHours() < 6) {
+									date.setDate(date.getDate() - 1);
+								}
+								const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+								if (!groupedByDate.has(dateKey)) {
+									groupedByDate.set(dateKey, []);
+								}
+								groupedByDate.get(dateKey)?.push(record);
+							}
+
+							// 日付を降順でソート
+							const sortedDates = Array.from(groupedByDate.keys()).sort((a, b) => b.localeCompare(a));
+
+							return sortedDates.map((dateKey) => {
+								const records = groupedByDate.get(dateKey) || [];
+								// 各日のレコードも降順でソート
+								const sortedRecords = records.sort((a, b) =>
+									new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+								);
+
+								// 日付をフォーマット
+								const [year, month, day] = dateKey.split('-');
+								const dateLabel = `${year}年${Number(month)}月${Number(day)}日`;
+
+								return (
+									<div key={dateKey} className="space-y-2">
+										<div className="text-sm font-semibold text-gray-600 px-2 py-1 bg-gray-50 rounded">
+											{dateLabel}
+										</div>
+										<div className="space-y-2">
+											{sortedRecords.map((record) => (
+												<RecordItem
+													key={record.id}
+													record={record}
+													onEdit={handleEdit}
+													onDelete={handleDelete}
+												/>
+											))}
+										</div>
+									</div>
+								);
+							});
+						})()}
 					</div>
 				)}
 			</div>
