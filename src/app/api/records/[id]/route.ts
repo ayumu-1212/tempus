@@ -4,10 +4,11 @@ import { getDayStart, getDayEnd, addTypeToRecords } from "@/lib/utils";
 
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } },
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
-		const id = Number.parseInt(params.id);
+		const { id: idStr } = await params;
+		const id = Number.parseInt(idStr);
 		if (Number.isNaN(id)) {
 			return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 		}
@@ -70,10 +71,11 @@ export async function PUT(
 
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } },
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
-		const id = Number.parseInt(params.id);
+		const { id: idStr } = await params;
+		const id = Number.parseInt(idStr);
 		if (Number.isNaN(id)) {
 			return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 		}
