@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ClockButton } from "@/components/ClockButton";
 import { StatusDisplay } from "@/components/StatusDisplay";
-import { RecordsList } from "@/components/RecordsList";
+import { RecordsList, type RecordsListRef } from "@/components/RecordsList";
 
 export default function Home() {
 	const [status, setStatus] = useState<"clocked_in" | "clocked_out">("clocked_out");
 	const [isLoading, setIsLoading] = useState(true);
+	const recordsListRef = useRef<RecordsListRef>(null);
 
 	const fetchStatus = async () => {
 		try {
@@ -29,8 +30,9 @@ export default function Home() {
 	}, []);
 
 	const handleClockSuccess = () => {
-		// 打刻成功後にステータスを再取得
+		// 打刻成功後にステータスと履歴リストを再取得
 		fetchStatus();
+		recordsListRef.current?.refresh();
 	};
 
 	if (isLoading) {
@@ -63,7 +65,7 @@ export default function Home() {
 					</div>
 
 					{/* 履歴表示エリア */}
-					<RecordsList />
+					<RecordsList ref={recordsListRef} />
 				</div>
 			</main>
 		</div>

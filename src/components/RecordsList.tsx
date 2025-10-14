@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { RecordItem } from "./RecordItem";
 import { AlertBanner } from "./AlertBanner";
 import { EditModal } from "./EditModal";
 import type { RecordsResponse, RecordWithType } from "@/types";
 
-export function RecordsList() {
+export interface RecordsListRef {
+	refresh: () => void;
+}
+
+export const RecordsList = forwardRef<RecordsListRef>((props, ref) => {
 	const [data, setData] = useState<RecordsResponse | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [year, setYear] = useState(new Date().getFullYear());
@@ -33,6 +37,13 @@ export function RecordsList() {
 	useEffect(() => {
 		fetchRecords(year, month);
 	}, [year, month]);
+
+	// 親コンポーネントから呼び出せるrefメソッド
+	useImperativeHandle(ref, () => ({
+		refresh: () => {
+			fetchRecords(year, month);
+		},
+	}));
 
 	const handlePrevMonth = () => {
 		if (month === 1) {
@@ -203,4 +214,6 @@ export function RecordsList() {
 			)}
 		</div>
 	);
-}
+});
+
+RecordsList.displayName = "RecordsList";
