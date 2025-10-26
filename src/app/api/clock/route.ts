@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getDayStart, getDayEnd, addTypeToRecords } from "@/lib/utils";
-import { sendDiscordNotification } from "@/lib/discord";
+import { sendSlackNotification } from "@/lib/slack";
 import type { ClockResponse } from "@/types";
 
 export async function POST(request: Request) {
@@ -51,9 +51,9 @@ export async function POST(request: Request) {
 			type: currentRecordWithType.type,
 		};
 
-		// Discord通知を送信（非同期で、エラーが発生しても処理は継続）
-		sendDiscordNotification(currentRecordWithType).catch((error) => {
-			console.error("Discord notification failed:", error);
+		// Slack通知を送信（非同期で、エラーが発生しても処理は継続）
+		sendSlackNotification(currentRecordWithType).catch((error) => {
+			console.error("Slack notification failed:", error);
 		});
 
 		return NextResponse.json(response);

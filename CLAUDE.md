@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Tempus is a personal time tracking system for clock in/out management with both web and Discord bot interfaces. The core architectural principle is **order-based type calculation**: records don't store clock in/out type in the database. Instead, the type is calculated from the record's position in the sorted daily records (odd position = clock in, even = clock out).
+Tempus is a personal time tracking system for clock in/out management with web interface and Slack webhook notifications. The core architectural principle is **order-based type calculation**: records don't store clock in/out type in the database. Instead, the type is calculated from the record's position in the sorted daily records (odd position = clock in, even = clock out).
 
 ## Development Commands
 
@@ -131,15 +131,21 @@ const newRecordWithType = recordsWithType.find(r => r.id === newRecord.id);
 ```
 src/
 ├── app/api/
-│   ├── clock/route.ts          # POST: Create clock record
+│   ├── clock/route.ts          # POST: Create clock record + Slack notification
 │   ├── status/route.ts         # GET: Current clock status (in/out)
 │   ├── records/route.ts        # GET: Monthly records with stats
 │   └── records/[id]/route.ts   # PUT/DELETE: Edit/delete record
 ├── lib/
 │   ├── utils.ts                # Date/time utilities, type calculation
-│   └── prisma.ts               # Prisma client singleton
+│   ├── prisma.ts               # Prisma client singleton
+│   └── slack.ts                # Slack webhook notification handler
 └── middleware.ts               # Basic auth protection
 ```
+
+**Slack notification (optional):**
+- Sends attachment message via webhook when clock in/out occurs
+- Gracefully skips if `SLACK_WEBHOOK_URL` is not configured
+- Errors don't affect main clock operation (fire-and-forget)
 
 ### Frontend Structure
 ```
@@ -150,11 +156,16 @@ src/
 └── components/
     ├── ClockButton.tsx         # Main clock in/out button
     ├── StatusDisplay.tsx       # Shows current status
-    ├── RecordsList.tsx         # Monthly record list with stats
+    ├── RecordsList.tsx         # Monthly record list with stats (grouped by date)
     ├── RecordItem.tsx          # Individual record row
     ├── EditModal.tsx           # Edit/add record modal
     └── AlertBanner.tsx         # Missing clock out warning
 ```
+
+**RecordsList features:**
+- Groups records by date (6AM-6AM boundary)
+- Auto-refresh after clock in/out via `forwardRef`/`useImperativeHandle`
+- Date section headers for better readability
 
 ## Common Patterns
 
@@ -211,12 +222,12 @@ BASIC_AUTH_USERNAME=admin
 BASIC_AUTH_PASSWORD=changeme
 ```
 
-Optional (Discord integration, not yet implemented):
+Optional (Slack webhook notifications):
 ```env
-DISCORD_BOT_TOKEN=your-bot-token
-DISCORD_USER_ID=your-discord-user-id
-DISCORD_NOTIFICATION_CHANNEL_ID=your-channel-id
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 ```
+
+If not set, Slack notifications are silently skipped.
 
 ## Important Constraints
 
