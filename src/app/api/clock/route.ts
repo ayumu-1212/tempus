@@ -61,11 +61,11 @@ export async function POST(request: Request) {
     // 	});
     // }
     // Slack通知
-    if (process.env.SLACK_WEBHOOK_URL) {
-      sendSlackNotification(currentRecordWithType).catch((error) => {
-        console.error("Slack notification failed:", error);
-      });
-    }
+    // if (process.env.SLACK_WEBHOOK_URL) {
+    //   sendSlackNotification(currentRecordWithType).catch((error) => {
+    //     console.error("Slack notification failed:", error);
+    //   });
+    // }
 
     return NextResponse.json(response);
   } catch (error) {
