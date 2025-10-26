@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Tempus is a personal time tracking system for clock in/out management with web interface and Slack webhook notifications. The core architectural principle is **order-based type calculation**: records don't store clock in/out type in the database. Instead, the type is calculated from the record's position in the sorted daily records (odd position = clock in, even = clock out).
+Tempus is a personal time tracking system for clock in/out management with web interface and optional Discord/Slack webhook notifications. The core architectural principle is **order-based type calculation**: records don't store clock in/out type in the database. Instead, the type is calculated from the record's position in the sorted daily records (odd position = clock in, even = clock out).
 
 ## Development Commands
 
@@ -131,20 +131,23 @@ const newRecordWithType = recordsWithType.find(r => r.id === newRecord.id);
 ```
 src/
 ├── app/api/
-│   ├── clock/route.ts          # POST: Create clock record + Slack notification
+│   ├── clock/route.ts          # POST: Create clock record + notifications
 │   ├── status/route.ts         # GET: Current clock status (in/out)
 │   ├── records/route.ts        # GET: Monthly records with stats
 │   └── records/[id]/route.ts   # PUT/DELETE: Edit/delete record
 ├── lib/
 │   ├── utils.ts                # Date/time utilities, type calculation
 │   ├── prisma.ts               # Prisma client singleton
+│   ├── discord.ts              # Discord webhook notification handler
 │   └── slack.ts                # Slack webhook notification handler
 └── middleware.ts               # Basic auth protection
 ```
 
-**Slack notification (optional):**
-- Sends attachment message via webhook when clock in/out occurs
-- Gracefully skips if `SLACK_WEBHOOK_URL` is not configured
+**Webhook notifications (optional):**
+- Discord: Sends embed message when clock in/out occurs
+- Slack: Sends attachment message when clock in/out occurs
+- Both can be enabled simultaneously by setting both webhook URLs
+- Gracefully skips if webhook URL is not configured
 - Errors don't affect main clock operation (fire-and-forget)
 
 ### Frontend Structure
@@ -222,12 +225,19 @@ BASIC_AUTH_USERNAME=admin
 BASIC_AUTH_PASSWORD=changeme
 ```
 
-Optional (Slack webhook notifications):
+Optional (Webhook notifications):
 ```env
+# Discord通知を有効にする場合
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+
+# Slack通知を有効にする場合
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 ```
 
-If not set, Slack notifications are silently skipped.
+**Notification behavior:**
+- Both can be enabled simultaneously (both URLs set) → sends to both platforms
+- Only one enabled (one URL set) → sends to that platform only
+- Neither set → no notifications sent (silently skipped)
 
 ## Important Constraints
 
