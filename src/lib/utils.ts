@@ -1,64 +1,99 @@
 import type { Record } from "@prisma/client";
 import type { ClockType, RecordWithType } from "@/types";
 
+// 日本時間のUTCオフセット（+9時間 = 540分）
+const JST_OFFSET_MINUTES = 540;
+
+/**
+ * UTC時刻を日本時間（JST）に変換
+ * @param date UTC日時
+ * @returns 日本時間の日時オブジェクト（内部的にはUTCだが、日本時間として扱う）
+ */
+function toJST(date: Date): Date {
+	const jst = new Date(date.getTime() + JST_OFFSET_MINUTES * 60 * 1000);
+	return jst;
+}
+
+/**
+ * 日本時間として扱っている日時をUTCに戻す
+ * @param jstDate 日本時間として扱っている日時
+ * @returns UTC日時
+ */
+function fromJST(jstDate: Date): Date {
+	const utc = new Date(jstDate.getTime() - JST_OFFSET_MINUTES * 60 * 1000);
+	return utc;
+}
+
 /**
  * 指定された日時が属する「1日」の開始時刻を取得
- * 1日の定義: AM 6:00 ～ 翌日 AM 6:00
+ * 1日の定義: 日本時間 AM 6:00 ～ 翌日 AM 6:00
  *
- * @param date 日時
- * @returns その日の開始時刻（6:00）
+ * @param date 日時（UTC）
+ * @returns その日の開始時刻（日本時間6:00、UTC表現）
  */
 export function getDayStart(date: Date): Date {
-	const dayStart = new Date(date);
-	dayStart.setHours(6, 0, 0, 0);
+	// UTC時刻を日本時間に変換
+	const jst = toJST(date);
 
-	// もし現在時刻が6時より前なら、前日の6時が開始
-	if (date.getHours() < 6) {
-		dayStart.setDate(dayStart.getDate() - 1);
+	// 日本時間での時刻を取得
+	const jstHours = jst.getUTCHours();
+
+	// 日本時間で6:00:00にセット
+	const dayStart = new Date(jst);
+	dayStart.setUTCHours(6, 0, 0, 0);
+
+	// もし現在時刻が日本時間で6時より前なら、前日の6時が開始
+	if (jstHours < 6) {
+		dayStart.setUTCDate(dayStart.getUTCDate() - 1);
 	}
 
-	return dayStart;
+	// 日本時間からUTCに戻す
+	return fromJST(dayStart);
 }
 
 /**
  * 指定された日時が属する「1日」の終了時刻を取得
- * 1日の定義: AM 6:00 ～ 翌日 AM 6:00
+ * 1日の定義: 日本時間 AM 6:00 ～ 翌日 AM 6:00
  *
- * @param date 日時
- * @returns その日の終了時刻（翌日の5:59:59.999）
+ * @param date 日時（UTC）
+ * @returns その日の終了時刻（日本時間翌日の5:59:59.999、UTC表現）
  */
 export function getDayEnd(date: Date): Date {
 	const dayEnd = new Date(getDayStart(date));
-	dayEnd.setDate(dayEnd.getDate() + 1);
-	dayEnd.setMilliseconds(-1); // 5:59:59.999
+	dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+	dayEnd.setUTCMilliseconds(-1); // 5:59:59.999
 
 	return dayEnd;
 }
 
 /**
  * 指定された月の開始時刻を取得
- * 月の定義: その月1日の6:00
+ * 月の定義: 日本時間でその月1日の6:00
  *
- * @param year 年
- * @param month 月（1-12）
- * @returns 月の開始時刻
+ * @param year 年（日本時間）
+ * @param month 月（1-12、日本時間）
+ * @returns 月の開始時刻（UTC表現）
  */
 export function getMonthStart(year: number, month: number): Date {
-	const monthStart = new Date(year, month - 1, 1, 6, 0, 0, 0);
-	return monthStart;
+	// 日本時間での月初1日6:00を作成（UTCとして）
+	const jstMonthStart = new Date(Date.UTC(year, month - 1, 1, 6, 0, 0, 0));
+	// 日本時間からUTCに変換
+	return fromJST(jstMonthStart);
 }
 
 /**
  * 指定された月の終了時刻を取得
- * 月の定義: 翌月1日の5:59:59.999
+ * 月の定義: 日本時間で翌月1日の5:59:59.999
  *
- * @param year 年
- * @param month 月（1-12）
- * @returns 月の終了時刻
+ * @param year 年（日本時間）
+ * @param month 月（1-12、日本時間）
+ * @returns 月の終了時刻（UTC表現）
  */
 export function getMonthEnd(year: number, month: number): Date {
-	const monthEnd = new Date(year, month, 1, 6, 0, 0, -1);
-	return monthEnd;
+	// 日本時間での翌月1日6:00を作成（UTCとして）
+	const jstMonthEnd = new Date(Date.UTC(year, month, 1, 6, 0, 0, -1));
+	// 日本時間からUTCに変換
+	return fromJST(jstMonthEnd);
 }
 
 /**
@@ -99,15 +134,17 @@ export function formatMinutesToHHMM(minutes: number): string {
 }
 
 /**
- * 日付を "YYYY-MM-DD" 形式に変換
+ * 日付を "YYYY-MM-DD" 形式に変換（日本時間基準）
  *
- * @param date 日付
- * @returns "YYYY-MM-DD" 形式の文字列
+ * @param date 日付（UTC）
+ * @returns "YYYY-MM-DD" 形式の文字列（日本時間での日付）
  */
 export function formatDateToISO(date: Date): string {
-	const year = date.getFullYear();
-	const month = (date.getMonth() + 1).toString().padStart(2, "0");
-	const day = date.getDate().toString().padStart(2, "0");
+	// UTC時刻を日本時間に変換
+	const jst = toJST(date);
+	const year = jst.getUTCFullYear();
+	const month = (jst.getUTCMonth() + 1).toString().padStart(2, "0");
+	const day = jst.getUTCDate().toString().padStart(2, "0");
 	return `${year}-${month}-${day}`;
 }
 
