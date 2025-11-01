@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Record {
-  id        Int      @id @default(autoincrement())
-  timestamp DateTime
-  source    String   // 'web' or 'discord'
-  isEdited  Boolean  @default(false) @map("is_edited")
-  comment   String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         Int      @id @default(autoincrement())
+  timestamp  DateTime
+  source     String   // 'web' or 'discord'
+  recordType String   @default("work") @map("record_type") // 'work' or 'break'
+  isEdited   Boolean  @default(false) @map("is_edited")
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([timestamp])
   @@map("records")

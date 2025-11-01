@@ -14,7 +14,7 @@ export async function PUT(
 		}
 
 		const body = await request.json();
-		const { timestamp, comment } = body;
+		const { timestamp, comment, recordType } = body;
 
 		if (!timestamp) {
 			return NextResponse.json(
@@ -29,6 +29,7 @@ export async function PUT(
 			data: {
 				timestamp: new Date(timestamp),
 				comment: comment || null,
+				recordType: recordType || "work",
 				isEdited: true,
 			},
 		});

@@ -7,7 +7,7 @@ import type { ClockResponse } from "@/types";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { source = "web", timestamp } = body;
+    const { source = "web", timestamp, recordType = "work" } = body;
 
     // タイムスタンプの取得（指定されていない場合は現在時刻）
     const clockTime = timestamp ? new Date(timestamp) : new Date();
@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       data: {
         timestamp: clockTime,
         source,
+        recordType, // 'work' or 'break'
         isEdited: !!timestamp, // timestampが指定されている場合は編集済みとする
       },
     });

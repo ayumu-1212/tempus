@@ -20,8 +20,29 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
 		minute: "2-digit",
 	});
 
-	const typeText = record.type === "clock_in" ? "出勤" : "退勤";
-	const typeColor = record.type === "clock_in" ? "text-blue-600" : "text-green-600";
+	// タイプに応じたテキストと色を設定
+	let typeText: string;
+	let typeColor: string;
+
+	switch (record.type) {
+		case "clock_in":
+			typeText = "出勤";
+			typeColor = "text-blue-600";
+			break;
+		case "clock_out":
+			typeText = "退勤";
+			typeColor = "text-green-600";
+			break;
+		case "break_start":
+			typeText = "休憩開始";
+			typeColor = "text-orange-600";
+			break;
+		case "break_end":
+			typeText = "休憩終了";
+			typeColor = "text-purple-600";
+			break;
+	}
+
 	const sourceBadge = record.source === "web" ? "Web" : "Discord";
 
 	return (

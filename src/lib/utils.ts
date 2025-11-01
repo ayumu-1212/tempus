@@ -97,17 +97,42 @@ export function getMonthEnd(year: number, month: number): Date {
 }
 
 /**
- * レコードに出勤/退勤の種類を付与
- * その日の打刻順序により判定：奇数番目=出勤、偶数番目=退勤
+ * レコードに出勤/退勤/休憩の種類を付与
+ * recordTypeごとに、その日の打刻順序により判定：
+ * - work: 奇数番目=出勤(clock_in)、偶数番目=退勤(clock_out)
+ * - break: 奇数番目=休憩開始(break_start)、偶数番目=休憩終了(break_end)
  *
  * @param records 時系列順にソートされた打刻レコード（同じ日のもの）
  * @returns 種類が付与されたレコード
  */
 export function addTypeToRecords(records: Record[]): RecordWithType[] {
-	return records.map((record, index) => ({
-		...record,
-		type: (index % 2 === 0 ? "clock_in" : "clock_out") as ClockType,
-	}));
+	// recordTypeごとにグループ化してインデックスを管理
+	const workIndex: Record<number, number> = {};
+	const breakIndex: Record<number, number> = {};
+	let workCount = 0;
+	let breakCount = 0;
+
+	return records.map((record, globalIndex) => {
+		const isWork = record.recordType === "work";
+		let type: ClockType;
+
+		if (isWork) {
+			const index = workCount;
+			workIndex[globalIndex] = index;
+			type = index % 2 === 0 ? "clock_in" : "clock_out";
+			workCount++;
+		} else {
+			const index = breakCount;
+			breakIndex[globalIndex] = index;
+			type = index % 2 === 0 ? "break_start" : "break_end";
+			breakCount++;
+		}
+
+		return {
+			...record,
+			type,
+		};
+	});
 }
 
 /**
@@ -182,6 +207,7 @@ export function groupRecordsByDay(
 
 /**
  * 月次統計を計算
+ * 休憩時間は勤務時間から除外される
  *
  * @param records その月の全打刻レコード
  * @returns 月次統計（総勤務時間、勤務日数、退勤未打刻の日）
@@ -199,16 +225,26 @@ export function calculateMonthlyStats(records: Record[]): {
 	for (const [dateKey, dayRecords] of grouped) {
 		const recordsWithType = addTypeToRecords(dayRecords);
 
+		// work(出退勤)のレコードのみをフィルタ
+		const workRecords = recordsWithType.filter(
+			(r) => r.type === "clock_in" || r.type === "clock_out",
+		);
+
 		// 奇数個（退勤未打刻）の場合
-		if (recordsWithType.length % 2 !== 0) {
+		if (workRecords.length % 2 !== 0) {
 			missingClockOuts.push(dateKey);
 			continue; // 集計から除外
 		}
 
+		// workレコードがない日はスキップ
+		if (workRecords.length === 0) {
+			continue;
+		}
+
 		// ペアごとに勤務時間を計算
-		for (let i = 0; i < recordsWithType.length; i += 2) {
-			const clockIn = recordsWithType[i];
-			const clockOut = recordsWithType[i + 1];
+		for (let i = 0; i < workRecords.length; i += 2) {
+			const clockIn = workRecords[i];
+			const clockOut = workRecords[i + 1];
 
 			if (clockIn && clockOut) {
 				const minutes = getMinutesDiff(

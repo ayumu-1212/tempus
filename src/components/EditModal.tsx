@@ -13,6 +13,7 @@ interface EditModalProps {
 export function EditModal({ record, isOpen, onClose, onSuccess }: EditModalProps) {
 	const [timestamp, setTimestamp] = useState("");
 	const [comment, setComment] = useState("");
+	const [recordType, setRecordType] = useState<"work" | "break">("work");
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
@@ -24,6 +25,7 @@ export function EditModal({ record, isOpen, onClose, onSuccess }: EditModalProps
 				.slice(0, 16);
 			setTimestamp(localDatetime);
 			setComment(record.comment || "");
+			setRecordType(record.recordType as "work" | "break");
 		}
 	}, [isOpen, record]);
 
@@ -45,6 +47,7 @@ export function EditModal({ record, isOpen, onClose, onSuccess }: EditModalProps
 					timestamp: new Date(timestamp).toISOString(),
 					comment: comment || null,
 					source: "web",
+					recordType,
 				}),
 			});
 
@@ -83,6 +86,21 @@ export function EditModal({ record, isOpen, onClose, onSuccess }: EditModalProps
 							required
 							className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 						/>
+					</div>
+
+					<div>
+						<label htmlFor="recordType" className="block text-sm font-medium text-gray-700 mb-1">
+							種類
+						</label>
+						<select
+							id="recordType"
+							value={recordType}
+							onChange={(e) => setRecordType(e.target.value as "work" | "break")}
+							className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+						>
+							<option value="work">勤務（出勤/退勤）</option>
+							<option value="break">休憩（休憩開始/終了）</option>
+						</select>
 					</div>
 
 					<div>

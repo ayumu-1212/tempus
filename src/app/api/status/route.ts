@@ -26,6 +26,7 @@ export async function GET() {
 		if (todayRecords.length === 0) {
 			const response: StatusResponse = {
 				status: "clocked_out",
+				breakStatus: "not_on_break",
 				lastRecord: null,
 			};
 			return NextResponse.json(response);
@@ -33,11 +34,30 @@ export async function GET() {
 
 		// 順序から種類を判定
 		const recordsWithType = addTypeToRecords(todayRecords);
+
+		// work(出退勤)とbreak(休憩)を分けて、それぞれの最後のレコードを取得
+		const workRecords = recordsWithType.filter(
+			(r) => r.type === "clock_in" || r.type === "clock_out",
+		);
+		const breakRecords = recordsWithType.filter(
+			(r) => r.type === "break_start" || r.type === "break_end",
+		);
+
+		// 勤務状態の判定（workレコードの最後）
+		const lastWorkRecord = workRecords[workRecords.length - 1];
+		const workStatus =
+			lastWorkRecord?.type === "clock_in" ? "clocked_in" : "clocked_out";
+
+		// 休憩状態の判定（breakレコードの最後）
+		const lastBreakRecord = breakRecords[breakRecords.length - 1];
+		const breakStatus =
+			lastBreakRecord?.type === "break_start" ? "on_break" : "not_on_break";
+
 		const lastRecord = recordsWithType[recordsWithType.length - 1];
 
-		// 最後の打刻が出勤（奇数個）なら出勤中、退勤（偶数個）なら退勤済み
 		const response: StatusResponse = {
-			status: lastRecord.type === "clock_in" ? "clocked_in" : "clocked_out",
+			status: workStatus,
+			breakStatus,
 			lastRecord,
 		};
 

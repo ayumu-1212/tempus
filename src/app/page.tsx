@@ -7,6 +7,7 @@ import { RecordsList, type RecordsListRef } from "@/components/RecordsList";
 
 export default function Home() {
 	const [status, setStatus] = useState<"clocked_in" | "clocked_out">("clocked_out");
+	const [breakStatus, setBreakStatus] = useState<"on_break" | "not_on_break">("not_on_break");
 	const [isLoading, setIsLoading] = useState(true);
 	const recordsListRef = useRef<RecordsListRef>(null);
 
@@ -18,6 +19,7 @@ export default function Home() {
 			}
 			const data = await response.json();
 			setStatus(data.status);
+			setBreakStatus(data.breakStatus);
 		} catch (error) {
 			console.error("Failed to fetch status:", error);
 		} finally {
@@ -49,7 +51,7 @@ export default function Home() {
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 					<div className="flex items-center justify-between">
 						<h1 className="text-2xl font-bold text-gray-900">Tempus</h1>
-						<StatusDisplay status={status} />
+						<StatusDisplay status={status} breakStatus={breakStatus} />
 					</div>
 				</div>
 			</header>
@@ -60,6 +62,7 @@ export default function Home() {
 					<div className="bg-white p-8 rounded-lg border border-gray-200 text-center">
 						<ClockButton
 							currentStatus={status}
+							breakStatus={breakStatus}
 							onClockSuccess={handleClockSuccess}
 						/>
 					</div>

@@ -17,10 +17,32 @@ export async function sendSlackNotification(
 
 	try {
 		// 打刻種類に応じたメッセージとカラー
-		const isClockIn = record.type === "clock_in";
-		const emoji = isClockIn ? ":large_green_circle:" : ":red_circle:";
-		const action = isClockIn ? "出勤しました" : "退勤しました";
-		const color = isClockIn ? "#36a64f" : "#ff0000"; // 緑 or 赤
+		let emoji: string;
+		let action: string;
+		let color: string;
+
+		switch (record.type) {
+			case "clock_in":
+				emoji = ":large_green_circle:";
+				action = "出勤しました";
+				color = "#36a64f"; // 緑
+				break;
+			case "clock_out":
+				emoji = ":red_circle:";
+				action = "退勤しました";
+				color = "#ff0000"; // 赤
+				break;
+			case "break_start":
+				emoji = ":coffee:";
+				action = "休憩を開始しました";
+				color = "#FFA500"; // オレンジ
+				break;
+			case "break_end":
+				emoji = ":muscle:";
+				action = "休憩を終了しました";
+				color = "#0000FF"; // 青
+				break;
+		}
 
 		// 日時のフォーマット
 		const timestamp = new Date(record.timestamp);
