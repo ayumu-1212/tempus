@@ -102,6 +102,7 @@ export const RecordsList = forwardRef<RecordsListRef>((props, ref) => {
 			id: 0, // ダミーID
 			timestamp: now,
 			source: "web",
+			recordType: "work",
 			isEdited: false,
 			comment: null,
 			createdAt: now,

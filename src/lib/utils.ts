@@ -107,8 +107,8 @@ export function getMonthEnd(year: number, month: number): Date {
  */
 export function addTypeToRecords(records: Record[]): RecordWithType[] {
 	// recordTypeごとにグループ化してインデックスを管理
-	const workIndex: Record<number, number> = {};
-	const breakIndex: Record<number, number> = {};
+	const workIndex: { [key: number]: number } = {};
+	const breakIndex: { [key: number]: number } = {};
 	let workCount = 0;
 	let breakCount = 0;
 
