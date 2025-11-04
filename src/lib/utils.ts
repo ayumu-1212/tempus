@@ -242,6 +242,7 @@ export function calculateMonthlyStats(records: Record[]): {
 		}
 
 		// ペアごとに勤務時間を計算
+		let dayWorkMinutes = 0;
 		for (let i = 0; i < workRecords.length; i += 2) {
 			const clockIn = workRecords[i];
 			const clockOut = workRecords[i + 1];
@@ -251,10 +252,32 @@ export function calculateMonthlyStats(records: Record[]): {
 					new Date(clockIn.timestamp),
 					new Date(clockOut.timestamp),
 				);
-				totalMinutes += minutes;
+				dayWorkMinutes += minutes;
 			}
 		}
 
+		// break(休憩)のレコードのみをフィルタ
+		const breakRecords = recordsWithType.filter(
+			(r) => r.type === "break_start" || r.type === "break_end",
+		);
+
+		// ペアごとに休憩時間を計算
+		let dayBreakMinutes = 0;
+		for (let i = 0; i < breakRecords.length; i += 2) {
+			const breakStart = breakRecords[i];
+			const breakEnd = breakRecords[i + 1];
+
+			if (breakStart && breakEnd) {
+				const minutes = getMinutesDiff(
+					new Date(breakStart.timestamp),
+					new Date(breakEnd.timestamp),
+				);
+				dayBreakMinutes += minutes;
+			}
+		}
+
+		// 勤務時間から休憩時間を差し引く
+		totalMinutes += dayWorkMinutes - dayBreakMinutes;
 		workingDays++;
 	}
 
