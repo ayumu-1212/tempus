@@ -21,7 +21,7 @@ VALUES ('chanabe', '0ff91037cbff71ab07f91a8432aba6eb8d717f258c38c11bf57cf929c13c
 ALTER TABLE "records" ADD COLUMN "user_id" INTEGER;
 
 -- Update existing records to reference default user
-UPDATE "records" SET "user_id" = (SELECT "id" FROM "users" WHERE "username" = 'default');
+UPDATE "records" SET "user_id" = (SELECT "id" FROM "users" WHERE "username" = 'chanabe');
 
 -- Now make user_id NOT NULL
 ALTER TABLE "records" ALTER COLUMN "user_id" SET NOT NULL;
