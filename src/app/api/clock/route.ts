@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getDayStart, getDayEnd, addTypeToRecords } from "@/lib/utils";
 import { sendSlackNotification } from "@/lib/slack";
+import { addTypeToRecords, getDayEnd, getDayStart } from "@/lib/utils";
 import type { ClockResponse } from "@/types";
 
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { source = "web", timestamp, recordType = "work" } = body;
 
@@ -15,6 +21,7 @@ export async function POST(request: Request) {
     // 打刻レコードを作成
     const record = await prisma.record.create({
       data: {
+        userId: user.id,
         timestamp: clockTime,
         source,
         recordType, // 'work' or 'break'
@@ -28,6 +35,7 @@ export async function POST(request: Request) {
 
     const dayRecords = await prisma.record.findMany({
       where: {
+        userId: user.id,
         timestamp: {
           gte: dayStart,
           lte: dayEnd,
@@ -41,7 +49,7 @@ export async function POST(request: Request) {
     // 順序から種類を判定
     const recordsWithType = addTypeToRecords(dayRecords);
     const currentRecordWithType = recordsWithType.find(
-      (r) => r.id === record.id
+      (r) => r.id === record.id,
     );
 
     if (!currentRecordWithType) {
@@ -73,7 +81,7 @@ export async function POST(request: Request) {
     console.error("Clock API error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to clock in/out" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

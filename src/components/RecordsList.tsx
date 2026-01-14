@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
-import { RecordItem } from "./RecordItem";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import type { RecordsResponse, RecordWithType } from "@/types";
 import { AlertBanner } from "./AlertBanner";
 import { EditModal } from "./EditModal";
-import type { RecordsResponse, RecordWithType } from "@/types";
+import { RecordItem } from "./RecordItem";
 
 interface PdfError {
   error: string;
@@ -110,6 +110,7 @@ export const RecordsList = forwardRef<RecordsListRef>((props, ref) => {
     const now = new Date();
     const dummyRecord: RecordWithType = {
       id: 0, // ダミーID
+      userId: 0, // ダミーユーザーID
       timestamp: now,
       source: "web",
       recordType: "work",

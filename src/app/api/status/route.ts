@@ -1,72 +1,79 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getDayStart, getDayEnd, addTypeToRecords } from "@/lib/utils";
+import { addTypeToRecords, getDayEnd, getDayStart } from "@/lib/utils";
 import type { StatusResponse } from "@/types";
 
 export async function GET() {
-	try {
-		// 当日（6:00-6:00）の打刻を取得
-		const now = new Date();
-		const dayStart = getDayStart(now);
-		const dayEnd = getDayEnd(now);
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    }
 
-		const todayRecords = await prisma.record.findMany({
-			where: {
-				timestamp: {
-					gte: dayStart,
-					lte: dayEnd,
-				},
-			},
-			orderBy: {
-				timestamp: "asc",
-			},
-		});
+    // 当日（6:00-6:00）の打刻を取得
+    const now = new Date();
+    const dayStart = getDayStart(now);
+    const dayEnd = getDayEnd(now);
 
-		// レコードがない場合
-		if (todayRecords.length === 0) {
-			const response: StatusResponse = {
-				status: "clocked_out",
-				breakStatus: "not_on_break",
-				lastRecord: null,
-			};
-			return NextResponse.json(response);
-		}
+    const todayRecords = await prisma.record.findMany({
+      where: {
+        userId: user.id,
+        timestamp: {
+          gte: dayStart,
+          lte: dayEnd,
+        },
+      },
+      orderBy: {
+        timestamp: "asc",
+      },
+    });
 
-		// 順序から種類を判定
-		const recordsWithType = addTypeToRecords(todayRecords);
+    // レコードがない場合
+    if (todayRecords.length === 0) {
+      const response: StatusResponse = {
+        status: "clocked_out",
+        breakStatus: "not_on_break",
+        lastRecord: null,
+      };
+      return NextResponse.json(response);
+    }
 
-		// work(出退勤)とbreak(休憩)を分けて、それぞれの最後のレコードを取得
-		const workRecords = recordsWithType.filter(
-			(r) => r.type === "clock_in" || r.type === "clock_out",
-		);
-		const breakRecords = recordsWithType.filter(
-			(r) => r.type === "break_start" || r.type === "break_end",
-		);
+    // 順序から種類を判定
+    const recordsWithType = addTypeToRecords(todayRecords);
 
-		// 勤務状態の判定（workレコードの最後）
-		const lastWorkRecord = workRecords[workRecords.length - 1];
-		const workStatus =
-			lastWorkRecord?.type === "clock_in" ? "clocked_in" : "clocked_out";
+    // work(出退勤)とbreak(休憩)を分けて、それぞれの最後のレコードを取得
+    const workRecords = recordsWithType.filter(
+      (r) => r.type === "clock_in" || r.type === "clock_out",
+    );
+    const breakRecords = recordsWithType.filter(
+      (r) => r.type === "break_start" || r.type === "break_end",
+    );
 
-		// 休憩状態の判定（breakレコードの最後）
-		const lastBreakRecord = breakRecords[breakRecords.length - 1];
-		const breakStatus =
-			lastBreakRecord?.type === "break_start" ? "on_break" : "not_on_break";
+    // 勤務状態の判定（workレコードの最後）
+    const lastWorkRecord = workRecords[workRecords.length - 1];
+    const workStatus =
+      lastWorkRecord?.type === "clock_in" ? "clocked_in" : "clocked_out";
 
-		const lastRecord = recordsWithType[recordsWithType.length - 1];
+    // 休憩状態の判定（breakレコードの最後）
+    const lastBreakRecord = breakRecords[breakRecords.length - 1];
+    const breakStatus =
+      lastBreakRecord?.type === "break_start" ? "on_break" : "not_on_break";
 
-		const response: StatusResponse = {
-			status: workStatus,
-			breakStatus,
-			lastRecord,
-		};
+    const lastRecord = recordsWithType[recordsWithType.length - 1];
 
-		return NextResponse.json(response);
-	} catch (error) {
-		console.error("Status API error:", error);
-		return NextResponse.json(
-			{ error: "Failed to get status" },
-			{ status: 500 },
-		);
-	}
+    const response: StatusResponse = {
+      status: workStatus,
+      breakStatus,
+      lastRecord,
+    };
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error("Status API error:", error);
+    return NextResponse.json(
+      { error: "Failed to get status" },
+      { status: 500 },
+    );
+  }
 }

@@ -1,17 +1,18 @@
+import path from "node:path";
 import { NextResponse } from "next/server";
+import PDFDocument from "pdfkit";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-  getMonthStart,
-  getMonthEnd,
-  groupRecordsByDay,
   addTypeToRecords,
   calculateMonthlyStats,
   formatMinutesToHHMM,
   getMinutesDiff,
+  getMonthEnd,
+  getMonthStart,
+  groupRecordsByDay,
 } from "@/lib/utils";
 import type { RecordWithType } from "@/types";
-import PDFDocument from "pdfkit";
-import path from "node:path";
 
 interface DayRecord {
   dateKey: string;
@@ -30,6 +31,11 @@ interface DayRecord {
 
 export async function GET(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const yearParam = searchParams.get("year");
     const monthParam = searchParams.get("month");
@@ -54,6 +60,7 @@ export async function GET(request: Request) {
     // 指定月の全レコードを取得
     const records = await prisma.record.findMany({
       where: {
+        userId: user.id,
         timestamp: {
           gte: monthStart,
           lte: monthEnd,

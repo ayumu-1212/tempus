@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Tempus - 勤怠管理システム",
-  description: "シンプルで使いやすい個人用の出退勤管理システム。WebとDiscordから打刻でき、勤務時間を自動集計します。",
+  description:
+    "シンプルで使いやすい個人用の出退勤管理システム。WebとDiscordから打刻でき、勤務時間を自動集計します。",
 };
 
 export default function RootLayout({
