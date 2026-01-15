@@ -3,9 +3,11 @@ import type { RecordWithType } from "@/types";
 /**
  * Slackに打刻通知を送信する
  * @param record 打刻レコード（type付き）
+ * @param displayName ユーザーの表示名
  */
 export async function sendSlackNotification(
   record: RecordWithType,
+  displayName: string,
 ): Promise<void> {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
@@ -58,7 +60,7 @@ export async function sendSlackNotification(
 
     // Slackメッセージの作成
     const message = {
-      text: `${emoji} ちゃなべが${action}`,
+      text: `${emoji} ${displayName}が${action}`,
       attachments: [
         {
           color,

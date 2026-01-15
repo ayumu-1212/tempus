@@ -3,9 +3,11 @@ import type { RecordWithType } from "@/types";
 /**
  * Discordに打刻通知を送信する
  * @param record 打刻レコード（type付き）
+ * @param displayName ユーザーの表示名
  */
 export async function sendDiscordNotification(
   record: RecordWithType,
+  displayName: string,
 ): Promise<void> {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
@@ -19,8 +21,8 @@ export async function sendDiscordNotification(
     // 打刻種類に応じたメッセージとカラー
     const isClockIn = record.type === "clock_in";
     const title = isClockIn
-      ? "🟢 ちゃなべが出勤しました"
-      : "🔴 ちゃなべが退勤しました";
+      ? `🟢 ${displayName}が出勤しました`
+      : `🔴 ${displayName}が退勤しました`;
     const color = isClockIn ? 0x00ff00 : 0xff0000; // 緑 or 赤
 
     // 日時のフォーマット

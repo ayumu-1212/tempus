@@ -63,15 +63,16 @@ export async function POST(request: Request) {
     };
 
     // 通知を送信（非同期で、エラーが発生しても処理は継続）
+    const displayName = user.displayName || user.username;
     // // Discord通知
     // if (process.env.DISCORD_WEBHOOK_URL) {
-    // 	sendDiscordNotification(currentRecordWithType).catch((error) => {
+    // 	sendDiscordNotification(currentRecordWithType, displayName).catch((error) => {
     // 		console.error("Discord notification failed:", error);
     // 	});
     // }
     // Slack通知
     if (process.env.SLACK_WEBHOOK_URL) {
-      sendSlackNotification(currentRecordWithType).catch((error) => {
+      sendSlackNotification(currentRecordWithType, displayName).catch((error) => {
         console.error("Slack notification failed:", error);
       });
     }
