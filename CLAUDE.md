@@ -41,14 +41,14 @@ npm run format
 
 ## Critical Architecture Concepts
 
-### 1. Custom Day Boundary (6AM-6AM)
-The system defines one "day" as 6:00 AM to 5:59:59 AM the next calendar day. This is not midnight-to-midnight.
+### 1. Custom Day Boundary (4AM-4AM)
+The system defines one "day" as 4:00 AM to 3:59:59 AM the next calendar day. This is not midnight-to-midnight.
 
 **Key utilities in `src/lib/utils.ts`:**
-- `getDayStart(date)` - Returns 6:00 AM of the "day" containing the date
-- `getDayEnd(date)` - Returns 5:59:59.999 AM of the next calendar day
-- `getMonthStart(year, month)` - Returns month start (1st at 6:00 AM)
-- `getMonthEnd(year, month)` - Returns month end (next month 1st at 5:59:59.999 AM)
+- `getDayStart(date)` - Returns 4:00 AM of the "day" containing the date
+- `getDayEnd(date)` - Returns 3:59:59.999 AM of the next calendar day
+- `getMonthStart(year, month)` - Returns month start (1st at 4:00 AM)
+- `getMonthEnd(year, month)` - Returns month end (next month 1st at 3:59:59.999 AM)
 
 **Always use these functions** when querying records by date. Never use midnight-based date calculations.
 
@@ -69,7 +69,7 @@ This function must be called after:
 
 ### 3. Monthly Statistics Calculation
 Located in `calculateMonthlyStats(records)` in `src/lib/utils.ts`:
-- Groups records by day (using 6AM-6AM boundaries)
+- Groups records by day (using 4AM-4AM boundaries)
 - Calculates type for each record via order
 - Pairs clock in/out records
 - If a day has an odd number of records → missing clock out (shows alert, excluded from total)
@@ -96,7 +96,7 @@ model Record {
 When creating or updating records:
 
 1. Write to database
-2. Query all records for that day (6AM-6AM range)
+2. Query all records for that day (4AM-4AM range)
 3. Sort by timestamp ascending
 4. Call `addTypeToRecords()` to calculate types
 5. Return the specific record with its calculated type
@@ -166,7 +166,7 @@ src/
 ```
 
 **RecordsList features:**
-- Groups records by date (6AM-6AM boundary)
+- Groups records by date (4AM-4AM boundary)
 - Auto-refresh after clock in/out via `forwardRef`/`useImperativeHandle`
 - Date section headers for better readability
 
@@ -242,7 +242,7 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 ## Important Constraints
 
 1. **Never add a `type` field to the database schema** - This would break the order-based calculation system
-2. **Always use 6AM-6AM day boundaries** - Never use midnight-based date logic
+2. **Always use 4AM-4AM day boundaries** - Never use midnight-based date logic
 3. **Always sort records by timestamp ascending** before calling `addTypeToRecords()`
 4. **Edited records** - Set `isEdited: true` when manually modifying timestamp or adding past records
 5. **Next.js 15 async params** - Dynamic route params are now Promises: `const { id } = await params`

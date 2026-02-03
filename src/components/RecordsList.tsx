@@ -252,13 +252,13 @@ export const RecordsList = forwardRef<RecordsListRef>((props, ref) => {
         ) : (
           <div className="space-y-4">
             {(() => {
-              // 日付ごとにグループ化（6:00-6:00基準）
+              // 日付ごとにグループ化（4:00-4:00基準）
               const groupedByDate = new Map<string, RecordWithType[]>();
 
               for (const record of data.records) {
                 const date = new Date(record.timestamp);
-                // 6時より前なら前日扱い
-                if (date.getHours() < 6) {
+                // 4時より前なら前日扱い
+                if (date.getHours() < 4) {
                   date.setDate(date.getDate() - 1);
                 }
                 const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;

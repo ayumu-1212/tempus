@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
-    // 当日（6:00-6:00）の打刻を取得
+    // 当日（4:00-4:00）の打刻を取得
     const now = new Date();
     const dayStart = getDayStart(now);
     const dayEnd = getDayEnd(now);
